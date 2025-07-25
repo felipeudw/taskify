@@ -1,16 +1,13 @@
-import {RouterProvider} from "react-router";
-import {QueryClientProvider} from "@tanstack/react-query";
-import {ReactQueryDevtools} from "@tanstack/react-query-devtools";
-import {queryClient} from "./queryClient";
-import {router} from "./router.tsx";
+import Sidebar from '../components/Sidebar';
+import Board from '../features/board/Board';
 
-function App() {
+export default function App() {
     return (
-        <QueryClientProvider client={queryClient}>
-            <RouterProvider router={router}/>
-            <ReactQueryDevtools initialIsOpen={false}/>
-        </QueryClientProvider>
+        <div className="flex h-screen bg-background text-foreground">
+            <Sidebar/>
+            <main className="flex-1 p-4 overflow-x-auto">
+                <Board/>
+            </main>
+        </div>
     );
 }
-
-export default App;

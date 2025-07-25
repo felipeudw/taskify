@@ -1,14 +1,17 @@
-import {Link} from "react-router";
+import ThemeToggle from './ThemeToggle';
+import {Button} from './ui/button';
+import AddTaskModal from '../features/board/AddTaskModal';
 
-const Sidebar = () => {
+export default function Sidebar() {
     return (
-        <aside className="w-64 h-screen bg-gray-100 border-r p-4">
-            <nav className="flex flex-col space-y-4">
-                <Link to="/">Home</Link>
-                <Link to="/boards">Boards</Link>
-            </nav>
+        <aside className="w-64 bg-muted p-4 flex flex-col justify-between">
+            <div>
+                <h1 className="text-2xl font-bold mb-4">Taskify</h1>
+                <AddTaskModal>
+                    <Button variant="default" className="w-full mb-4">+ New Task</Button>
+                </AddTaskModal>
+            </div>
+            <ThemeToggle/>
         </aside>
     );
-};
-
-export default Sidebar;
+}
