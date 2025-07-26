@@ -4,6 +4,7 @@ import { GripVertical, Trash2, CheckCircle, Circle } from "lucide-react";
 import { useTaskStore } from "../../store/useTaskStore";
 import type { Task } from "../../types/task";
 import { cn } from "../../lib/utils";
+import { priorityBorderColors  } from '../../constants/ui'
 
 interface TaskCardProps {
     task: Task;
@@ -26,10 +27,10 @@ export default function TaskCard({ task, dragging = false }: TaskCardProps) {
     // ✅ Priority color as a subtle right border
     const priorityColor =
         task.priority === "high"
-            ? "border-red-500/60 dark:border-red-400/70"
+            ? priorityBorderColors.high
             : task.priority === "medium"
-                ? "border-amber-500/60 dark:border-amber-400/70"
-                : "border-emerald-500/60 dark:border-emerald-400/70";
+                ? priorityBorderColors.medium
+                : priorityBorderColors.low;
 
     return (
         <div
