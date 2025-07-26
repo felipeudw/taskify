@@ -1,6 +1,15 @@
 import {Button} from "@/components/ui/button";
+import {useAuthStore} from "@/store/authStore.ts";
+import {Navigate} from "react-router";
 
 export default function StartPage() {
+    const token = useAuthStore((state) => state.token);
+
+    // If user is logged in, redirect to boards
+    if (token) {
+        return <Navigate to="/boards" replace />;
+    }
+
     return (
         <div className="min-h-screen flex flex-col items-center justify-center px-4
       bg-gradient-to-br from-purple-50 to-purple-100 dark:from-gray-900 dark:to-gray-950 transition-colors">
