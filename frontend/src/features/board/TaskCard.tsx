@@ -23,23 +23,25 @@ export default function TaskCard({task, dragging = false}: TaskCardProps) {
         transition,
     };
 
-    const color =
+    const priorityColor =
         task.priority === 'high'
-            ? 'bg-red-500'
+            ? 'border-red-500/50'
             : task.priority === 'medium'
-                ? 'bg-yellow-500'
-                : 'bg-green-500';
+                ? 'border-amber-500/50'
+                : 'border-emerald-500/50';
+
 
     return (
         <div
             ref={setNodeRef}
             style={style}
             className={cn(
-                'relative group bg-background border rounded-lg p-3 flex items-center justify-between transition',
-                dragging ? 'cursor-grabbing' : 'hover:shadow-md'
+                'relative group bg-background border rounded-lg p-3 flex items-center justify-between transition hover:shadow-md',
+                dragging && 'opacity-50',
+                `border-r-8 ${priorityColor}` // Cool priority bar
             )}
         >
-            {/* Left: Drag handle + Done button */}
+            {/* Left: Drag handle + Done */}
             <div className="flex items-center gap-2">
                 {!dragging && (
                     <button
@@ -66,17 +68,20 @@ export default function TaskCard({task, dragging = false}: TaskCardProps) {
                 </button>
             </div>
 
-            {/* Title */}
-            <div className="flex-1 px-3">
-                <h3 className={cn('font-medium', task.done && 'line-through text-gray-400')}>
+            {/* Task Title */}
+            <div className="flex-1 px-3 text-sm break-words">
+                <h3 className={cn(
+                    'font-medium text-gray-900 dark:text-gray-100', // ✅ softer for dark mode
+                    task.done && 'line-through text-gray-400 dark:text-gray-500'
+                )}>
                     {task.title}
                 </h3>
+                {task.dueDate && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{task.dueDate}</p>
+                )}
             </div>
 
-            {/* Priority dot */}
-            <span className={`w-3 h-3 rounded-full ${color}`}></span>
-
-            {/* Delete button */}
+            {/* Delete Button */}
             {!dragging && (
                 <button
                     onClick={(e) => {
