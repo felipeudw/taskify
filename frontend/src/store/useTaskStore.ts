@@ -9,6 +9,8 @@ interface TaskStore {
     moveTask: (taskId: string, newColumn: ColumnType) => void;
     deleteTask: (taskId: string) => void;
     getTasksByColumn: (column: ColumnType) => Task[];
+    toggleDone: (taskId: string) => void;
+    reorderTask: (fromIndex: number, toIndex: number, columnId: ColumnType) => void;
 }
 
 export const useTaskStore = create<TaskStore>()(
@@ -25,13 +27,34 @@ export const useTaskStore = create<TaskStore>()(
                 })),
             moveTask: (taskId, newColumn) =>
                 set((state) => ({
-                    tasks: state.tasks.map((t) => (t.id === taskId ? {...t, column: newColumn} : t)),
+                    tasks: state.tasks.map((t) =>
+                        t.id === taskId ? {...t, column: newColumn} : t
+                    ),
                 })),
             deleteTask: (taskId) =>
                 set((state) => ({
                     tasks: state.tasks.filter((t) => t.id !== taskId),
                 })),
             getTasksByColumn: (column) => get().tasks.filter((t) => t.column === column),
+            toggleDone: (taskId) =>
+                set((state) => ({
+                    tasks: state.tasks.map((t) =>
+                        t.id === taskId ? {...t, done: !t.done} : t
+                    ),
+                })),
+            reorderTask: (fromIndex, toIndex, columnId) =>
+                set((state) => {
+                    const tasksInColumn = state.tasks.filter((t) => t.column === columnId);
+                    const taskToMove = tasksInColumn[fromIndex];
+                    if (!taskToMove) return state;
+
+                    const updatedColumnTasks = [...tasksInColumn];
+                    updatedColumnTasks.splice(fromIndex, 1);
+                    updatedColumnTasks.splice(toIndex, 0, taskToMove);
+
+                    const remainingTasks = state.tasks.filter((t) => t.column !== columnId);
+                    return {tasks: [...remainingTasks, ...updatedColumnTasks]};
+                }),
         }),
         {name: 'taskify-store'}
     )

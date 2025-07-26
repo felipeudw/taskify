@@ -7,4 +7,5 @@ export interface Task {
     priority: 'low' | 'medium' | 'high';
     dueDate?: string;
     column: ColumnType;
+    done?: boolean;
 }

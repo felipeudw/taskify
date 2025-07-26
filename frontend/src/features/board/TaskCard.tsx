@@ -1,13 +1,28 @@
-import {useDraggable} from '@dnd-kit/core';
 import type {Task} from '../../types/task';
-import {X} from 'lucide-react';
+import {GripVertical, Trash2, CheckCircle, Circle} from 'lucide-react';
 import {useTaskStore} from '../../store/useTaskStore';
+import {cn} from '../../lib/utils';
+import {useSortable} from "@dnd-kit/sortable";
+import {CSS} from '@dnd-kit/utilities';
 
-export default function TaskCard({task}: { task: Task }) {
+interface TaskCardProps {
+    task: Task;
+    dragging?: boolean;
+}
+
+export default function TaskCard({task, dragging = false}: TaskCardProps) {
     const deleteTask = useTaskStore((s) => s.deleteTask);
-    const {attributes, listeners, setNodeRef, transform} = useDraggable({id: task.id});
+    const toggleDone = useTaskStore((s) => s.toggleDone);
 
-    const style = transform ? {transform: `translate(${transform.x}px, ${transform.y}px)`} : undefined;
+    const {attributes, listeners, setNodeRef, transform, transition} = useSortable({
+        id: task.id,
+    });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+    };
+
     const color =
         task.priority === 'high'
             ? 'bg-red-500'
@@ -18,25 +33,61 @@ export default function TaskCard({task}: { task: Task }) {
     return (
         <div
             ref={setNodeRef}
-            {...listeners}
-            {...attributes}
             style={style}
-            className="bg-background border rounded-lg p-2 flex justify-between items-center cursor-grab"
+            className={cn(
+                'relative group bg-background border rounded-lg p-3 flex items-center justify-between transition',
+                dragging ? 'cursor-grabbing' : 'hover:shadow-md'
+            )}
         >
-            <div>
-                <h3 className="font-medium">{task.title}</h3>
-                {task.dueDate && <p className="text-xs text-gray-500">{task.dueDate}</p>}
-            </div>
+            {/* Left: Drag handle + Done button */}
             <div className="flex items-center gap-2">
-                <span className={`w-3 h-3 rounded-full ${color}`}></span>
+                {!dragging && (
+                    <button
+                        {...listeners}
+                        {...attributes}
+                        className="cursor-grab text-gray-400 hover:text-gray-600"
+                    >
+                        <GripVertical size={16}/>
+                    </button>
+                )}
+
                 <button
                     onClick={(e) => {
-                        deleteTask(task.id);
+                        e.stopPropagation();
+                        toggleDone(task.id);
                     }}
+                    className="transition-opacity"
                 >
-                    <X size={16}/>
+                    {task.done ? (
+                        <CheckCircle size={18} className="text-green-600"/>
+                    ) : (
+                        <Circle size={18} className="text-gray-400 hover:text-green-500"/>
+                    )}
                 </button>
             </div>
+
+            {/* Title */}
+            <div className="flex-1 px-3">
+                <h3 className={cn('font-medium', task.done && 'line-through text-gray-400')}>
+                    {task.title}
+                </h3>
+            </div>
+
+            {/* Priority dot */}
+            <span className={`w-3 h-3 rounded-full ${color}`}></span>
+
+            {/* Delete button */}
+            {!dragging && (
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        deleteTask(task.id);
+                    }}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-700"
+                >
+                    <Trash2 size={18}/>
+                </button>
+            )}
         </div>
     );
 }
