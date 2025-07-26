@@ -17,9 +17,18 @@ export const useTaskStore = create<TaskStore>()(
     persist(
         (set, get) => ({
             tasks: [
-                {id: nanoid(), title: 'Design UI Mockups', priority: 'high', column: 'today'},
-                {id: nanoid(), title: 'Prepare Meeting Notes', priority: 'medium', column: 'week'},
-                {id: nanoid(), title: 'Update Docs', priority: 'low', column: 'inbox'},
+                { id: nanoid(), title: "Build Responsive Header", priority: "high", column: "today" },
+                { id: nanoid(), title: "Polish TaskCard UI (Hover + Stripe)", priority: "medium", column: "today" },
+                { id: nanoid(), title: "Fix Drag-and-Drop Bug (Empty Column)", priority: "high", column: "today" },
+                { id: nanoid(), title: "Add LocalStorage Persistence", priority: "medium", column: "today" },
+                { id: nanoid(), title: "Add Priority Colors", priority: "medium", column: "today" },
+
+                { id: nanoid(), title: "Improve Dark Mode Colors", priority: "low", column: "week" },
+
+                { id: nanoid(), title: "Update README for Phase 1", priority: "low", column: "inbox" },
+                { id: nanoid(), title: "Refactor Zustand Store for Performance", priority: "high", column: "inbox" },
+                { id: nanoid(), title: "Research Phase 2 (Backend Setup)", priority: "medium", column: "upcoming" },
+                { id: nanoid(), title: "Plan Multi-User Board (Phase 6)", priority: "low", column: "upcoming" }
             ],
             addTask: (title, column, priority, dueDate) =>
                 set((state) => ({
@@ -45,7 +54,8 @@ export const useTaskStore = create<TaskStore>()(
                 set((state) => ({
                     tasks: state.tasks.filter((t) => t.id !== taskId),
                 })),
-            getTasksByColumn: (column) => get().tasks.filter((t) => t.column === column),
+            // In useTaskStore
+            getTasksByColumn: (columnId) => get().tasks.filter((t) => t.column === columnId),
             toggleDone: (taskId) =>
                 set((state) => ({
                     tasks: state.tasks.map((t) =>

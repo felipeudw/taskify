@@ -1,7 +1,6 @@
 import {useState, useMemo} from 'react';
 import {
     DndContext,
-    closestCorners,
     DragOverlay,
     type DragEndEvent, rectIntersection,
 } from '@dnd-kit/core';

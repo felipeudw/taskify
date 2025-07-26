@@ -1,30 +1,31 @@
-import { useMemo } from "react";
-import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { useDroppable } from "@dnd-kit/core";
-import { useTaskStore } from "../../store/useTaskStore";
+import {SortableContext, verticalListSortingStrategy} from "@dnd-kit/sortable";
+import {useDroppable} from "@dnd-kit/core";
+import {useTaskStore} from "../../store/useTaskStore";
 import TaskCard from "./TaskCard";
-import type { ColumnType } from "../../types/task";
-import { cn } from "../../lib/utils";
+import type {ColumnType} from "../../types/task";
+import {cn} from "../../lib/utils";
+import {useMemo} from "react";
 
 interface Props {
     columnId: ColumnType;
     title: string;
 }
 
-export default function BoardColumn({ columnId, title }: Props) {
+export default function BoardColumn({columnId, title}: Props) {
     const allTasks = useTaskStore((state) => state.tasks);
-
     const tasks = useMemo(() => allTasks.filter((t) => t.column === columnId), [allTasks, columnId]);
     const itemIds = useMemo(() => tasks.map((t) => t.id), [tasks]);
 
-    const { setNodeRef, isOver } = useDroppable({ id: columnId });
+    const {setNodeRef, isOver} = useDroppable({id: columnId});
 
     return (
         <div
             ref={setNodeRef}
+            role="region"
+            aria-label={`${title} column`}
             className={cn(
-                "relative bg-card rounded-xl min-h-[500px] shadow-md flex flex-col border border-border transition-all",
-                "w-64 sm:w-72 lg:w-80 max-w-full", // ✅ Responsive widths
+                "relative bg-card rounded-xl min-h-[500px] shadow-md flex flex-col border border-border transition-all duration-200 ease-in-out",
+                "w-[20rem]", // Or use: "flex-[0_0_20rem] min-w-[16rem]"
                 isOver && "ring-2 ring-primary/50 bg-accent/30"
             )}
         >
@@ -37,10 +38,10 @@ export default function BoardColumn({ columnId, title }: Props) {
             <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
                 <div className="flex-1 flex flex-col gap-3 p-4">
                     {tasks.length > 0 ? (
-                        tasks.map((task) => <TaskCard key={task.id} task={task} />)
+                        tasks.map((task) => <TaskCard key={task.id} task={task}/>)
                     ) : (
-                        // ✅ Make placeholder fill entire area for hit detection
-                        <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground opacity-50 border border-dashed border-border rounded-md pointer-events-none">
+                        <div
+                            className="flex-1 flex items-center justify-center text-sm text-muted-foreground opacity-50 border border-dashed border-border rounded-md pointer-events-none">
                             Drop tasks here
                         </div>
                     )}
