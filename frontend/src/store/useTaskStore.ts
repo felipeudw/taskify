@@ -6,7 +6,7 @@ import {nanoid} from 'nanoid';
 interface TaskStore {
     tasks: Task[];
     addTask: (title: string, column: ColumnType, priority: 'low' | 'medium' | 'high', dueDate?: string) => void;
-    moveTask: (taskId: string, newColumn: ColumnType) => void;
+    moveTask: (taskId: string, newColumn: ColumnType, beforeTaskId?: string) => void;
     deleteTask: (taskId: string) => void;
     getTasksByColumn: (column: ColumnType) => Task[];
     toggleDone: (taskId: string) => void;
@@ -25,12 +25,22 @@ export const useTaskStore = create<TaskStore>()(
                 set((state) => ({
                     tasks: [...state.tasks, {id: nanoid(), title, priority, column, dueDate}],
                 })),
-            moveTask: (taskId, newColumn) =>
-                set((state) => ({
-                    tasks: state.tasks.map((t) =>
-                        t.id === taskId ? {...t, column: newColumn} : t
-                    ),
-                })),
+            moveTask: (taskId, newColumn, beforeTaskId?) =>
+                set((state) => {
+                    const updatedTasks = state.tasks.map((t) =>
+                        t.id === taskId ? { ...t, column: newColumn } : t
+                    );
+
+                    // ✅ If beforeTaskId is provided, reorder after moving
+                    if (beforeTaskId) {
+                        const targetIndex = updatedTasks.findIndex((t) => t.id === beforeTaskId);
+                        const movingIndex = updatedTasks.findIndex((t) => t.id === taskId);
+                        const [movedTask] = updatedTasks.splice(movingIndex, 1);
+                        updatedTasks.splice(targetIndex, 0, movedTask);
+                    }
+
+                    return { tasks: updatedTasks };
+                }),
             deleteTask: (taskId) =>
                 set((state) => ({
                     tasks: state.tasks.filter((t) => t.id !== taskId),
@@ -45,15 +55,12 @@ export const useTaskStore = create<TaskStore>()(
             reorderTask: (fromIndex, toIndex, columnId) =>
                 set((state) => {
                     const tasksInColumn = state.tasks.filter((t) => t.column === columnId);
-                    const taskToMove = tasksInColumn[fromIndex];
-                    if (!taskToMove) return state;
-
                     const updatedColumnTasks = [...tasksInColumn];
-                    updatedColumnTasks.splice(fromIndex, 1);
-                    updatedColumnTasks.splice(toIndex, 0, taskToMove);
+                    const [movedTask] = updatedColumnTasks.splice(fromIndex, 1);
+                    updatedColumnTasks.splice(toIndex, 0, movedTask);
 
                     const remainingTasks = state.tasks.filter((t) => t.column !== columnId);
-                    return {tasks: [...remainingTasks, ...updatedColumnTasks]};
+                    return { tasks: [...remainingTasks, ...updatedColumnTasks] };
                 }),
         }),
         {name: 'taskify-store'}

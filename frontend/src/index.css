@@ -7,6 +7,7 @@ html, body, #root {
   height: 100%;
 }
 
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -162,4 +163,26 @@ html, body, #root {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+body {
+  @apply bg-background text-foreground;
+  background: linear-gradient(
+          135deg,
+          var(--background) 0%,
+          oklch(0.98 0 0) 100%
+  );
+}
+
+.dark body {
+  background: linear-gradient(
+          135deg,
+          var(--background) 0%,
+          oklch(0.20 0 0) 100%
+  );
+}
+
+/* Smooth transitions for theme switch */
+body, .board-column, .task-card {
+  transition: background 0.3s ease, color 0.3s ease, border 0.3s ease;
 }

@@ -3,7 +3,7 @@ import {
     DndContext,
     closestCorners,
     DragOverlay,
-    type DragEndEvent,
+    type DragEndEvent, rectIntersection,
 } from '@dnd-kit/core';
 import BoardColumn from './BoardColumn';
 import TaskCard from './TaskCard';
@@ -30,9 +30,7 @@ export default function Board() {
     };
 
     const handleDragEnd = (event: DragEndEvent) => {
-        const {active, over} = event;
-        setActiveId(null);
-
+        const { active, over } = event;
         if (!over) return;
 
         const activeId = active.id as string;
@@ -45,19 +43,20 @@ export default function Board() {
         const overTask = tasks.find((t) => t.id === overId);
 
         if (overTask) {
-            // ✅ Reorder inside the same column
+            // ✅ Dropped over another task
             if (activeTask.column === overTask.column) {
+                // ✅ Reorder inside the same column
                 const columnTasks = tasks.filter((t) => t.column === activeTask.column);
                 const oldIndex = columnTasks.findIndex((t) => t.id === activeId);
                 const newIndex = columnTasks.findIndex((t) => t.id === overId);
                 reorderTask(oldIndex, newIndex, activeTask.column);
             } else {
-                // ✅ Move to another column
-                moveTask(activeId, overTask.column);
+                // ✅ Move to another column (drop before overTask)
+                moveTask(activeId, overTask.column, overTask.id);
             }
         } else {
-            // ✅ Dropped on a column container
-            if (overId !== activeTask.column) {
+            // ✅ Dropped on an empty column (or outside items)
+            if (activeTask.column !== overId) {
                 moveTask(activeId, overId as any);
             }
         }
@@ -72,7 +71,7 @@ export default function Board() {
 
     return (
         <DndContext
-            collisionDetection={closestCorners}
+            collisionDetection={rectIntersection}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
             onDragCancel={handleDragCancel}
