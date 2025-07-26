@@ -9,45 +9,38 @@ export function Header() {
     return (
         <header
             className="
-        relative flex items-center justify-between px-6 py-4
-        bg-gradient-to-r from-primary to-primary/80
-        text-primary-foreground
-        shadow-md
-      "
+    flex flex-wrap items-center justify-between gap-4
+    px-4 py-3
+    bg-gradient-to-r from-primary to-primary/80
+    text-primary-foreground
+    shadow-md
+  "
         >
             {/* Left: Add Task */}
-            <AddTaskModal>
-                <Button
-                    variant="secondary"
-                    className="rounded-lg bg-white/20 hover:bg-white/30 text-primary-foreground border-none"
-                >
-                    + Add Task
-                </Button>
-            </AddTaskModal>
+            <div className="order-1">
+                <AddTaskModal>
+                    <Button className="bg-white/20 hover:bg-white/30 text-primary-foreground">
+                        + Add Task
+                    </Button>
+                </AddTaskModal>
+            </div>
 
             {/* Center: App Name */}
-            <h1 className="absolute left-1/2 transform -translate-x-1/2 text-xl font-bold tracking-tight">
+            <h1 className="order-2 w-full text-center text-xl font-bold tracking-tight sm:w-auto sm:order-none">
                 Taskify
             </h1>
 
             {/* Right: Theme Toggle + Profile */}
-            <div className="flex items-center gap-3">
-                {/* Theme Toggle */}
+            <div className="order-3 flex items-center gap-3">
                 <Button
                     variant="ghost"
                     size="icon"
-                    className="text-primary-foreground hover:bg-white/20"
+                    className="hover:bg-white/20"
                     onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                 >
-                    {theme === "dark" ? <Sun size={18}/> : <Moon size={18}/>}
+                    {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
                 </Button>
-
-                {/* Profile Button */}
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="rounded-full hover:bg-white/20"
-                >
+                <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/20">
                     <img
                         src="https://ui-avatars.com/api/?name=User"
                         alt="Profile"
@@ -56,5 +49,6 @@ export function Header() {
                 </Button>
             </div>
         </header>
+
     );
 }

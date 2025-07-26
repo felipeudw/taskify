@@ -23,7 +23,8 @@ export default function BoardColumn({ columnId, title }: Props) {
         <div
             ref={setNodeRef}
             className={cn(
-                "relative bg-card rounded-xl w-72 min-h-[500px] shadow-md flex flex-col border border-border transition-all",
+                "relative bg-card rounded-xl min-h-[500px] shadow-md flex flex-col border border-border transition-all",
+                "w-64 sm:w-72 lg:w-80 max-w-full", // ✅ Responsive widths
                 isOver && "ring-2 ring-primary/50 bg-accent/30"
             )}
         >
