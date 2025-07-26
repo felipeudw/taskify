@@ -7,18 +7,14 @@ export const api = axios.create({
     },
 });
 
-// Optional: Add interceptors if you want auth token support later
-api.interceptors.request.use(
-    (config) => {
-        // Example: attach token
-        // const token = localStorage.getItem("auth_token");
-        // if (token) {
-        //   config.headers.Authorization = `Bearer ${token}`;
-        // }
-        return config;
-    },
-    (error) => Promise.reject(error)
-);
+// Interceptor to add JWT token
+api.interceptors.request.use((config) => {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
 
 api.interceptors.response.use(
     (response) => response,
