@@ -1,35 +1,41 @@
-import { BrowserRouter, Routes, Route } from "react-router";
-import { ThemeProvider } from "@/components/theme-provider";
-import { Header } from "@/components/Header";
-import { BoardLayout } from "@/features/board/BoardLayout";
+import {BrowserRouter, Routes, Route, Navigate} from "react-router";
+import {ThemeProvider} from "@/components/theme-provider";
+import {Header} from "@/components/Header";
+import {BoardLayout} from "@/features/board/BoardLayout";
 import Board from "@/features/board/Board";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
-import { ProtectedRoute } from "@/routes/ProtectedRoute";
 import StartPage from "@/pages/StartPage";
+import {Toaster} from "sonner";
+import {useAuthStore} from "@/store/authStore";
 
 export default function App() {
+    const token = useAuthStore((s) => s.token);
+
     return (
         <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
             <BrowserRouter>
+                <Toaster richColors position="top-center"/>
                 <Routes>
                     {/* Public Routes */}
-                    <Route path="/" element={<StartPage />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<Register />} />
+                    <Route path="/" element={!token ? <StartPage/> : <Navigate to="/boards"/>}/>
+                    <Route path="/login" element={!token ? <Login/> : <Navigate to="/boards"/>}/>
+                    <Route path="/register" element={!token ? <Register/> : <Navigate to="/boards"/>}/>
 
-                    {/* Protected Routes */}
+                    {/* Protected */}
                     <Route
                         path="/boards"
                         element={
-                            <ProtectedRoute>
+                            token ? (
                                 <div className="h-full flex flex-col">
-                                    <Header />
+                                    <Header/>
                                     <BoardLayout>
-                                        <Board />
+                                        <Board/>
                                     </BoardLayout>
                                 </div>
-                            </ProtectedRoute>
+                            ) : (
+                                <Navigate to="/" replace/>
+                            )
                         }
                     />
                 </Routes>

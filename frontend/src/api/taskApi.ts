@@ -1,5 +1,12 @@
 import {api} from './api';
 
+export interface Task {
+    id: string;
+    title: string;
+    priority: 'low' | 'medium' | 'high';
+    column: 'inbox' | 'today' | 'week' | 'upcoming';
+}
+
 export interface CreateTaskRequest {
     boardId: string;
     title: string;

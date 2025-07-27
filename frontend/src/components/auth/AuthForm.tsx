@@ -1,11 +1,12 @@
 import {useForm} from "react-hook-form";
 import {z} from "zod";
 import {zodResolver} from "@hookform/resolvers/zod";
-import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card.tsx";
-import {Button} from "@/components/ui/button.tsx";
-import {Input} from "@/components/ui/input.tsx";
-import {Form, FormField, FormItem, FormControl, FormMessage} from "@/components/ui/form.tsx";
-import {useAuthStore} from "@/store/authStore.ts";
+import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
+import {Button} from "@/components/ui/button";
+import {Input} from "@/components/ui/input";
+import {Form, FormField, FormItem, FormControl, FormMessage} from "@/components/ui/form";
+import {useAuthStore} from "@/store/authStore";
+import {useNavigate} from "react-router";
 
 const schema = z.object({
     email: z.string().email("Invalid email"),
@@ -13,8 +14,9 @@ const schema = z.object({
 });
 
 export function AuthForm({type}: { type: "login" | "register" }) {
-    const {login, register, loading, error} = useAuthStore();
-    const action = type === "login" ? login : register;
+    const {login, register: registerUser, loading, error} = useAuthStore();
+    const action = type === "login" ? login : registerUser;
+    const navigate = useNavigate();
 
     const form = useForm<z.infer<typeof schema>>({
         resolver: zodResolver(schema),
@@ -22,10 +24,8 @@ export function AuthForm({type}: { type: "login" | "register" }) {
     });
 
     const onSubmit = async (values: z.infer<typeof schema>) => {
-        await action(values);
-        if (!useAuthStore.getState().error) {
-            window.location.href = "/boards";
-        }
+        const success = await action(values);
+        if (success) navigate("/boards");
     };
 
     return (

@@ -62,7 +62,7 @@ export function Header() {
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/20">
                             <img
-                                src={`https://ui-avatars.com/api/?name=${user?.email || "User"}`}
+                                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user?.email || 'User')}`}
                                 alt="Profile"
                                 className="w-8 h-8 rounded-full"
                             />

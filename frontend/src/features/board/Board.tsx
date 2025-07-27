@@ -18,15 +18,14 @@ export default function Board() {
     const [activeId, setActiveId] = useState<string | null>(null);
     const boardId = useAuthStore((state) => state.boardId);
 
-    if (!boardId) return <p className="text-center mt-6">No boards available</p>;
-
+    // ✅ Always call hooks in the same order
     const {
         data: tasks = [],
         isLoading,
         isError,
     } = useQuery({
         queryKey: ["tasks", boardId],
-        queryFn: () => getTasksByBoard(boardId),
+        queryFn: () => getTasksByBoard(boardId!), // `!` safe because enabled: !!boardId
         enabled: !!boardId,
     });
 
@@ -46,7 +45,7 @@ export default function Board() {
     const handleDragCancel = () => setActiveId(null);
 
     const handleDragEnd = (event: DragEndEvent) => {
-        const { active, over } = event;
+        const {active, over} = event;
         if (!over) return;
 
         const activeTask = tasks.find((t) => t.id === active.id);
@@ -67,7 +66,7 @@ export default function Board() {
 
                 if (oldIndex !== newIndex) {
                     const reordered = reorderArray(columnTasks, oldIndex, newIndex);
-                    const updates = reordered.map((t, index) => ({ id: t.id, order: index }));
+                    const updates = reordered.map((t, index) => ({id: t.id, order: index}));
 
                     queryClient.setQueryData<Task[]>(["tasks", boardId], (old = []) => {
                         const others = old.filter((t) => t.column !== activeTask.column);
@@ -86,12 +85,12 @@ export default function Board() {
             queryClient.setQueryData<Task[]>(["tasks", boardId], (old = []) =>
                 old.map((t) =>
                     t.id === activeTask.id
-                        ? { ...t, column: targetColumn, order: newOrder }
+                        ? {...t, column: targetColumn, order: newOrder}
                         : t
                 )
             );
 
-            moveTaskMutation.mutate({ taskId: activeTask.id, newColumn: targetColumn, newOrder });
+            moveTaskMutation.mutate({taskId: activeTask.id, newColumn: targetColumn, newOrder});
         }
 
         setActiveId(null);
@@ -104,6 +103,8 @@ export default function Board() {
         return copy.map((task, index) => ({...task, order: index}));
     };
 
+    // ✅ Safe render after hooks
+    if (!boardId) return <p className="text-center mt-6">No boards available</p>;
     if (isLoading) return <p className="text-center mt-6">Loading tasks...</p>;
     if (isError) return <p className="text-center text-red-500">Failed to load tasks</p>;
 
@@ -133,12 +134,15 @@ export default function Board() {
                 )}
             </div>
 
+            {/* ✅ Safe DragOverlay fallback */}
             <DragOverlay>
                 {activeTask ? (
                     <div className="pointer-events-none opacity-90 scale-105 shadow-lg">
                         <TaskCard task={activeTask} dragging/>
                     </div>
-                ) : null}
+                ) : (
+                    <div/>
+                )}
             </DragOverlay>
         </DndContext>
     );
