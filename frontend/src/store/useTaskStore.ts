@@ -13,7 +13,7 @@ interface TaskStore {
     reorderTask: (fromIndex: number, toIndex: number, columnId: ColumnType) => void;
 }
 
-export const useTaskStore = create<TaskStore>()(
+export const useTaskStoreOld = create<TaskStore>()(
     persist(
         (set, get) => ({
             tasks: [

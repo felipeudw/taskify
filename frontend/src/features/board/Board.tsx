@@ -1,72 +1,76 @@
-import {useState, useMemo} from 'react';
-import {
-    DndContext,
-    DragOverlay,
-    type DragEndEvent, rectIntersection,
-} from '@dnd-kit/core';
-import BoardColumn from './BoardColumn';
-import TaskCard from './TaskCard';
-import {useTaskStore} from '../../store/useTaskStore';
-import type {Task} from '../../types/task';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getTasksByBoard, moveTaskApi, type Task } from "@/api/taskApi";
+import { useState, useMemo } from "react";
+import { DndContext, DragOverlay, rectIntersection, type DragEndEvent } from "@dnd-kit/core";
+import BoardColumn from "./BoardColumn";
+import TaskCard from "./TaskCard";
+import { useAuthStore } from "@/store/authStore";
 
 const columns = [
-    {id: 'inbox', title: 'Inbox'},
-    {id: 'today', title: 'Today'},
-    {id: 'week', title: 'This Week'},
-    {id: 'upcoming', title: 'Upcoming'},
+    { id: "inbox", title: "Inbox" },
+    { id: "today", title: "Today" },
+    { id: "week", title: "This Week" },
+    { id: "upcoming", title: "Upcoming" },
 ];
 
 export default function Board() {
-    // ✅ Select tasks and actions once
-    const tasks = useTaskStore((s) => s.tasks);
-    const moveTask = useTaskStore((s) => s.moveTask);
-    const reorderTask = useTaskStore((s) => s.reorderTask);
-
+    const queryClient = useQueryClient();
     const [activeId, setActiveId] = useState<string | null>(null);
+    const boardId = useAuthStore((state) => state.boardId);
 
-    const handleDragStart = (event: any) => {
-        setActiveId(event.active.id as string);
-    };
+    if (!boardId) {
+        return <p className="text-center text-gray-500 mt-6">No boards available</p>;
+    }
 
+    const {
+        data: tasks = [],
+        isLoading,
+        isError,
+    } = useQuery({
+        queryKey: ["tasks", boardId],
+        queryFn: () => getTasksByBoard(boardId),
+        enabled: !!boardId,
+    });
+
+    const moveTaskMutation = useMutation({
+        mutationFn: moveTaskApi,
+        onMutate: async ({ taskId, newColumn }) => {
+            await queryClient.cancelQueries({ queryKey: ["tasks", boardId] });
+            const previousTasks = queryClient.getQueryData<Task[]>(["tasks", boardId]);
+
+            queryClient.setQueryData<Task[]>(["tasks", boardId], (old = []) =>
+                old.map((t) => (t.id === taskId ? { ...t, column: newColumn } : t))
+            );
+
+            return { previousTasks };
+        },
+        onError: (_err, _vars, context) => {
+            if (context?.previousTasks) {
+                queryClient.setQueryData(["tasks", boardId], context.previousTasks);
+            }
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ["tasks", boardId] });
+        },
+    });
+
+    const activeTask = useMemo(() => tasks.find((t) => t.id === activeId), [activeId, tasks]);
+
+    const handleDragStart = (event: any) => setActiveId(event.active.id as string);
+    const handleDragCancel = () => setActiveId(null);
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
         if (!over) return;
 
-        const activeId = active.id as string;
-        const overId = over.id as string;
-        if (activeId === overId) return;
+        const activeTask = tasks.find((t) => t.id === active.id);
+        if (!activeTask || activeTask.column === over.id) return;
 
-        const activeTask = tasks.find((t) => t.id === activeId);
-        if (!activeTask) return;
-
-        const overTask = tasks.find((t) => t.id === overId);
-
-        if (overTask) {
-            // ✅ Dropped over another task
-            if (activeTask.column === overTask.column) {
-                // ✅ Reorder inside the same column
-                const columnTasks = tasks.filter((t) => t.column === activeTask.column);
-                const oldIndex = columnTasks.findIndex((t) => t.id === activeId);
-                const newIndex = columnTasks.findIndex((t) => t.id === overId);
-                reorderTask(oldIndex, newIndex, activeTask.column);
-            } else {
-                // ✅ Move to another column (drop before overTask)
-                moveTask(activeId, overTask.column, overTask.id);
-            }
-        } else {
-            // ✅ Dropped on an empty column (or outside items)
-            if (activeTask.column !== overId) {
-                moveTask(activeId, overId as any);
-            }
-        }
+        moveTaskMutation.mutate({ taskId: activeTask.id, newColumn: over.id as string });
+        setActiveId(null);
     };
 
-    const handleDragCancel = () => setActiveId(null);
-
-    const activeTask: Task | undefined = useMemo(
-        () => (activeId ? tasks.find((t) => t.id === activeId) : undefined),
-        [activeId, tasks]
-    );
+    if (isLoading) return <p className="text-center mt-6">Loading tasks...</p>;
+    if (isError) return <p className="text-center text-red-500">Failed to load tasks</p>;
 
     return (
         <DndContext
@@ -75,17 +79,32 @@ export default function Board() {
             onDragEnd={handleDragEnd}
             onDragCancel={handleDragCancel}
         >
-            <div className="flex gap-4">
-                {columns.map((col) => (
-                    <BoardColumn key={col.id} columnId={col.id as any} title={col.title}/>
-                ))}
+            {/* ✅ Scrollable container */}
+            <div className="w-full h-full bg-muted px-4 py-6 overflow-x-auto">
+                <div className="flex gap-6 min-w-max">
+                    {columns.map((col) => (
+                        <BoardColumn
+                            key={col.id}
+                            columnId={col.id as any}
+                            title={col.title}
+                            tasks={tasks.filter((t) => t.column === col.id)}
+                        />
+                    ))}
+                </div>
+
+                {/* ✅ Empty State */}
+                {tasks.length === 0 && (
+                    <div className="mt-10 text-center text-gray-400 text-lg">
+                        No tasks yet. Click <strong>+ Add Task</strong> to create your first one.
+                    </div>
+                )}
             </div>
 
-            {/* ✅ Drag overlay for smooth preview */}
+            {/* ✅ Drag Overlay */}
             <DragOverlay>
                 {activeTask ? (
                     <div className="pointer-events-none opacity-90 scale-105 shadow-lg">
-                        <TaskCard task={activeTask} dragging/>
+                        <TaskCard task={activeTask} dragging />
                     </div>
                 ) : null}
             </DragOverlay>

@@ -1,22 +1,17 @@
-import {SortableContext, verticalListSortingStrategy} from "@dnd-kit/sortable";
-import {useDroppable} from "@dnd-kit/core";
-import {useTaskStore} from "../../store/useTaskStore";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { useDroppable } from "@dnd-kit/core";
 import TaskCard from "./TaskCard";
-import type {ColumnType} from "../../types/task";
-import {cn} from "../../lib/utils";
-import {useMemo} from "react";
+import { cn } from "../../lib/utils";
+import type { Task } from "@/api/taskApi";
 
 interface Props {
-    columnId: ColumnType;
+    columnId: string;
     title: string;
+    tasks: Task[];
 }
 
-export default function BoardColumn({columnId, title}: Props) {
-    const allTasks = useTaskStore((state) => state.tasks);
-    const tasks = useMemo(() => allTasks.filter((t) => t.column === columnId), [allTasks, columnId]);
-    const itemIds = useMemo(() => tasks.map((t) => t.id), [tasks]);
-
-    const {setNodeRef, isOver} = useDroppable({id: columnId});
+export default function BoardColumn({ columnId, title, tasks }: Props) {
+    const { setNodeRef, isOver } = useDroppable({ id: columnId });
 
     return (
         <div
@@ -25,7 +20,7 @@ export default function BoardColumn({columnId, title}: Props) {
             aria-label={`${title} column`}
             className={cn(
                 "relative bg-card rounded-xl min-h-[500px] shadow-md flex flex-col border border-border transition-all duration-200 ease-in-out",
-                "w-[20rem]", // Or use: "flex-[0_0_20rem] min-w-[16rem]"
+                "w-[20rem]",
                 isOver && "ring-2 ring-primary/50 bg-accent/30"
             )}
         >
@@ -34,14 +29,15 @@ export default function BoardColumn({columnId, title}: Props) {
                 {title}
             </h2>
 
-            {/* Sortable items */}
-            <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
+            {/* Sortable Items */}
+            <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
                 <div className="flex-1 flex flex-col gap-3 p-4">
                     {tasks.length > 0 ? (
-                        tasks.map((task) => <TaskCard key={task.id} task={task}/>)
+                        tasks.map((task) => <TaskCard key={task.id} task={task} />)
                     ) : (
                         <div
-                            className="flex-1 flex items-center justify-center text-sm text-muted-foreground opacity-50 border border-dashed border-border rounded-md pointer-events-none">
+                            className="flex-1 flex items-center justify-center text-sm text-muted-foreground opacity-50 border border-dashed border-border rounded-md pointer-events-none"
+                        >
                             Drop tasks here
                         </div>
                     )}

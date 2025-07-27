@@ -1,30 +1,42 @@
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Trash2, CheckCircle, Circle } from "lucide-react";
-import { useTaskStore } from "../../store/useTaskStore";
-import type { Task } from "../../types/task";
-import { cn } from "../../lib/utils";
-import { priorityBorderColors  } from '../../constants/ui'
+import {useSortable} from "@dnd-kit/sortable";
+import {CSS} from "@dnd-kit/utilities";
+import {GripVertical, Trash2, CheckCircle, Circle} from "lucide-react";
+import {cn} from "../../lib/utils";
+import {priorityBorderColors} from "../../constants/ui";
+import type {Task} from "@/api/taskApi";
+import {useMutation, useQueryClient} from "@tanstack/react-query";
+import {deleteTaskApi, toggleTaskApi} from "@/api/taskApi";
 
 interface TaskCardProps {
     task: Task;
     dragging?: boolean;
 }
 
-export default function TaskCard({ task, dragging = false }: TaskCardProps) {
-    const deleteTask = useTaskStore((s) => s.deleteTask);
-    const toggleDone = useTaskStore((s) => s.toggleDone);
+export default function TaskCard({task, dragging = false}: TaskCardProps) {
+    const queryClient = useQueryClient();
 
-    const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
-        id: task.id,
+    const deleteMutation = useMutation({
+        mutationFn: () => deleteTaskApi(task.id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["tasks", task.boardId] });
+        },
     });
+
+    const toggleMutation = useMutation({
+        mutationFn: () => toggleTaskApi(task.id, !task.done),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["tasks", task.boardId] });
+        },
+    });
+
+    const {attributes, listeners, setNodeRef, transform, transition} =
+        useSortable({id: task.id});
 
     const style = {
         transform: CSS.Transform.toString(transform),
         transition,
     };
 
-    // ✅ Priority color as a subtle right border
     const priorityColor =
         task.priority === "high"
             ? priorityBorderColors.high
@@ -50,26 +62,33 @@ export default function TaskCard({ task, dragging = false }: TaskCardProps) {
                         {...attributes}
                         className="cursor-grab text-muted-foreground hover:text-foreground"
                     >
-                        <GripVertical size={16} />
+                        <GripVertical size={16}/>
                     </button>
                 )}
 
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
-                        toggleDone(task.id);
+                        toggleMutation.mutate();
                     }}
+                    disabled={toggleMutation.isLoading}
                     className="transition-colors"
                 >
                     {task.done ? (
-                        <CheckCircle size={18} className="text-green-500 dark:text-green-400" />
+                        <CheckCircle
+                            size={18}
+                            className="text-green-500 dark:text-green-400"
+                        />
                     ) : (
-                        <Circle size={18} className="text-muted-foreground hover:text-green-500" />
+                        <Circle
+                            size={18}
+                            className="text-muted-foreground hover:text-green-500"
+                        />
                     )}
                 </button>
             </div>
 
-            {/* Task Title & Due Date */}
+            {/* Task Title */}
             <div className="flex-1 px-3 text-sm break-words">
                 <h3
                     className={cn(
@@ -84,16 +103,17 @@ export default function TaskCard({ task, dragging = false }: TaskCardProps) {
                 )}
             </div>
 
-            {/* Delete Button (only on hover) */}
+            {/* Delete Button */}
             {!dragging && (
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
-                        deleteTask(task.id);
+                        deleteMutation.mutate();
                     }}
+                    disabled={deleteMutation.isLoading}
                     className="opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-600"
                 >
-                    <Trash2 size={18} />
+                    <Trash2 size={18}/>
                 </button>
             )}
         </div>

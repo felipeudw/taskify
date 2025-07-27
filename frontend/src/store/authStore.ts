@@ -5,6 +5,7 @@ import type {AuthResponse, LoginData, User} from '../types/auth';
 interface AuthState {
     user: User | null;
     token: string | null;
+    boardId: string | null;
     loading: boolean;
     error: string | null;
     login: (data: LoginData) => Promise<void>;
@@ -16,6 +17,7 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
     user: null,
     token: localStorage.getItem('access_token'),
+    boardId: localStorage.getItem("board_id"),
     loading: false,
     error: null,
 
@@ -26,6 +28,14 @@ export const useAuthStore = create<AuthState>((set) => ({
             localStorage.setItem('access_token', res.data.access_token);
             set({token: res.data.access_token});
             await useAuthStore.getState().fetchUser();
+
+            // Fetch boards and store default boardId
+            const boardsRes = await api.get("/boards");
+            const defaultBoard = boardsRes.data[0];
+            if (defaultBoard) {
+                localStorage.setItem("board_id", defaultBoard.id);
+                set({ boardId: defaultBoard.id });
+            }
         } catch (error: any) {
             set({error: error.response?.data?.message || 'Login failed'});
         } finally {
@@ -40,6 +50,14 @@ export const useAuthStore = create<AuthState>((set) => ({
             localStorage.setItem('access_token', res.data.access_token);
             set({token: res.data.access_token});
             await useAuthStore.getState().fetchUser();
+
+            // Fetch boards and store default boardId
+            const boardsRes = await api.get("/boards");
+            const defaultBoard = boardsRes.data[0];
+            if (defaultBoard) {
+                localStorage.setItem("board_id", defaultBoard.id);
+                set({ boardId: defaultBoard.id });
+            }
         } catch (error: any) {
             set({error: error.response?.data?.message || 'Registration failed'});
         } finally {
@@ -49,6 +67,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     logout: () => {
         localStorage.removeItem('access_token');
+        localStorage.removeItem("board_id");
         set({user: null, token: null});
     },
 
