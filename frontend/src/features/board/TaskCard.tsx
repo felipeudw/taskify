@@ -18,41 +18,30 @@ export default function TaskCard({task, dragging = false}: TaskCardProps) {
 
     const deleteMutation = useMutation({
         mutationFn: () => deleteTaskApi(task.id),
-        onSuccess: () => {
-            queryClient.invalidateQueries({queryKey: ["tasks", task.boardId]});
-        },
+        onSuccess: () => queryClient.invalidateQueries({queryKey: ["tasks", task.boardId]}),
     });
 
     const toggleMutation = useMutation({
         mutationFn: () => toggleTaskApi(task.id, !task.done),
         onMutate: async () => {
-            await queryClient.cancelQueries({queryKey: ['tasks', task.boardId]});
-
-            const previousTasks = queryClient.getQueryData<Task[]>(['tasks', task.boardId]);
-
-            queryClient.setQueryData(['tasks', task.boardId], (old: Task[] = []) =>
+            await queryClient.cancelQueries({queryKey: ["tasks", task.boardId]});
+            const previousTasks = queryClient.getQueryData<Task[]>(["tasks", task.boardId]);
+            queryClient.setQueryData(["tasks", task.boardId], (old: Task[] = []) =>
                 old.map((t) => (t.id === task.id ? {...t, done: !task.done} : t))
             );
-
             return {previousTasks};
         },
         onError: (_err, _vars, context) => {
             if (context?.previousTasks) {
-                queryClient.setQueryData(['tasks', task.boardId], context.previousTasks);
+                queryClient.setQueryData(["tasks", task.boardId], context.previousTasks);
             }
         },
-        onSettled: () => {
-            queryClient.invalidateQueries({queryKey: ['tasks', task.boardId]});
-        },
+        onSettled: () => queryClient.invalidateQueries({queryKey: ["tasks", task.boardId]}),
     });
 
-    const {attributes, listeners, setNodeRef, transform, transition} =
-        useSortable({id: task.id});
+    const {attributes, listeners, setNodeRef, transform, transition} = useSortable({id: task.id});
 
-    const style = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-    };
+    const style = {transform: CSS.Transform.toString(transform), transition};
 
     const priorityColor =
         task.priority === "high"
@@ -66,66 +55,62 @@ export default function TaskCard({task, dragging = false}: TaskCardProps) {
             ref={setNodeRef}
             style={style}
             className={cn(
-                "relative group bg-background border rounded-lg p-4 flex flex-col justify-between transition-shadow hover:shadow-md",
+                "relative group bg-background border rounded-lg p-3 flex flex-col transition-shadow hover:shadow-lg hover:bg-muted/30",
                 dragging && "opacity-50",
                 `border-r-8 ${priorityColor}`
             )}
         >
-            {/* Drag handle */}
-            <div className="absolute top-2 left-2">
+            {/* Header: Handle + Title */}
+            <div className="flex items-start gap-3">
                 {!dragging && (
                     <button
                         {...listeners}
                         {...attributes}
-                        className="cursor-grab text-muted-foreground hover:text-foreground"
+                        className="cursor-grab text-muted-foreground hover:text-foreground mt-1"
+                        title="Drag to reorder"
                     >
-                        <GripVertical size={16}/>
+                        <GripVertical size={18} />
                     </button>
                 )}
-            </div>
 
-            {/* Main content: Title */}
-            <div className="flex-1 text-sm px-2 pt-1">
-                <h3
-                    className={cn(
-                        "font-medium text-foreground text-base break-words",
-                        task.done && "line-through text-muted-foreground"
+                <div className="flex-1 min-w-0">
+                    <h3
+                        className={cn(
+                            "text-[15px] font-normal text-gray-800 dark:text-gray-200 leading-relaxed break-words",
+                            task.done && "line-through text-muted-foreground"
+                        )}
+                    >
+                        {task.title}
+                    </h3>
+                    {task.dueDate && (
+                        <p className="text-xs text-muted-foreground mt-0.5">{task.dueDate}</p>
                     )}
-                >
-                    {task.title}
-                </h3>
-                {task.dueDate && (
-                    <p className="text-xs text-muted-foreground mt-1">{task.dueDate}</p>
-                )}
+                </div>
             </div>
 
-            {/* Footer: Actions (hidden by default, shown on hover) */}
-            <div
-                className="flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity mt-3 border-t pt-2"
-            >
-                {/* Done toggle */}
+            {/* Footer (hover only) */}
+            <div className="flex justify-between items-center mt-2 px-1 h-8 opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all border-t pt-1">
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
                         toggleMutation.mutate();
                     }}
                     disabled={toggleMutation.isLoading}
-                    className="flex items-center gap-1 text-muted-foreground hover:text-green-500"
+                    className="flex items-center gap-1 text-muted-foreground hover:text-green-500 text-xs"
                 >
                     {task.done ? (
                         <>
-                            <CheckCircle size={16}/>
-                            <span className="text-xs">Undo</span>
+                            <CheckCircle size={14} />
+                            <span>Undo</span>
                         </>
                     ) : (
                         <>
-                            <Circle size={16}/>
-                            <span className="text-xs">Done</span>
+                            <Circle size={14} />
+                            <span>Done</span>
                         </>
                     )}
                 </button>
 
-                {/* Edit Task */}
                 <EditTaskModal
                     taskId={task.id}
                     initialTitle={task.title}
@@ -134,26 +119,26 @@ export default function TaskCard({task, dragging = false}: TaskCardProps) {
                 >
                     <button
                         onClick={(e) => e.stopPropagation()}
-                        className="flex items-center gap-1 text-muted-foreground hover:text-blue-500"
+                        className="flex items-center gap-1 text-muted-foreground hover:text-blue-500 text-xs"
                     >
-                        <Pencil size={16}/>
-                        <span className="text-xs">Edit</span>
+                        <Pencil size={14} />
+                        <span>Edit</span>
                     </button>
                 </EditTaskModal>
 
-                {/* Delete */}
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
                         deleteMutation.mutate();
                     }}
                     disabled={deleteMutation.isLoading}
-                    className="flex items-center gap-1 text-red-500 hover:text-red-600"
+                    className="flex items-center gap-1 text-red-500 hover:text-red-600 text-xs"
                 >
-                    <Trash2 size={16}/>
-                    <span className="text-xs">Delete</span>
+                    <Trash2 size={14} />
+                    <span>Delete</span>
                 </button>
             </div>
         </div>
+
     );
 }

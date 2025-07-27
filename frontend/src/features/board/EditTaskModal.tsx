@@ -96,7 +96,7 @@ export default function EditTaskModal({
                     {/* Title */}
                     <div>
                         <Input
-                            placeholder="Task title"
+                            placeholder="Task description"
                             {...form.register('title')}
                             className={form.formState.errors.title ? 'border-red-500' : ''}
                         />
