@@ -24,8 +24,25 @@ export default function TaskCard({task, dragging = false}: TaskCardProps) {
 
     const toggleMutation = useMutation({
         mutationFn: () => toggleTaskApi(task.id, !task.done),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["tasks", task.boardId] });
+        onMutate: async () => {
+            await queryClient.cancelQueries({ queryKey: ['tasks', task.boardId] });
+
+            const previousTasks = queryClient.getQueryData<Task[]>(['tasks', task.boardId]);
+
+            // Optimistic update
+            queryClient.setQueryData(['tasks', task.boardId], (old: Task[] = []) =>
+                old.map((t) => (t.id === task.id ? { ...t, done: !task.done } : t))
+            );
+
+            return { previousTasks };
+        },
+        onError: (_err, _vars, context) => {
+            if (context?.previousTasks) {
+                queryClient.setQueryData(['tasks', task.boardId], context.previousTasks);
+            }
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ['tasks', task.boardId] });
         },
     });
 
