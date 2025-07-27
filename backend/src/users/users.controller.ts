@@ -9,4 +9,3 @@ export class UsersController {
     return req.user;
   }
 }
-git status
