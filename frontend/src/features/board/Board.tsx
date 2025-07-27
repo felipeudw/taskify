@@ -5,6 +5,7 @@ import {DndContext, DragOverlay, rectIntersection, type DragEndEvent} from "@dnd
 import BoardColumn from "./BoardColumn";
 import TaskCard from "./TaskCard";
 import {useAuthStore} from "@/store/authStore";
+import TaskToolbar from "./TaskToolbar";
 
 const columns = [
     {id: "inbox", title: "Inbox"},
@@ -16,18 +17,33 @@ const columns = [
 export default function Board() {
     const queryClient = useQueryClient();
     const [activeId, setActiveId] = useState<string | null>(null);
+    const [doneFilter, setDoneFilter] = useState<"all" | "done" | "undone">("all");
+    const [priorityFilter, setPriorityFilter] = useState<"all" | "low" | "medium" | "high">("all");
     const boardId = useAuthStore((state) => state.boardId);
 
-    // ✅ Always call hooks in the same order
+    // Always call hooks in the same order
     const {
         data: tasks = [],
         isLoading,
         isError,
     } = useQuery({
         queryKey: ["tasks", boardId],
-        queryFn: () => getTasksByBoard(boardId!), // `!` safe because enabled: !!boardId
+        queryFn: () => getTasksByBoard(boardId!),
         enabled: !!boardId,
     });
+
+    const filteredTasks = tasks.filter((t) => {
+        if (doneFilter === "done" && !t.done) return false;
+        if (doneFilter === "undone" && t.done) return false;
+        if (priorityFilter !== "all" && t.priority !== priorityFilter) return false;
+        return true;
+    });
+
+    // Toolbar handler
+    const handleFilterChange = (done: "all" | "done" | "undone", priority: "all" | "low" | "medium" | "high") => {
+        setDoneFilter(done);
+        setPriorityFilter(priority);
+    };
 
     const moveTaskMutation = useMutation({
         mutationFn: moveTaskApi,
@@ -50,7 +66,7 @@ export default function Board() {
 
         const activeTask = tasks.find((t) => t.id === active.id);
         const overTask = tasks.find((t) => t.id === over.id);
-        const targetColumn = overTask ? overTask.column : over.id; // ✅ If no task, use columnId
+        const targetColumn = overTask ? overTask.column : over.id; // If no task, use columnId
 
         if (!activeTask) {
             setActiveId(null);
@@ -58,7 +74,7 @@ export default function Board() {
         }
 
         if (activeTask.column === targetColumn) {
-            // ✅ Same column reorder
+            // Same column reorder
             if (overTask) {
                 const columnTasks = tasks.filter((t) => t.column === activeTask.column);
                 const oldIndex = columnTasks.findIndex((t) => t.id === active.id);
@@ -77,11 +93,11 @@ export default function Board() {
                 }
             }
         } else {
-            // ✅ Move to another column (including empty column)
+            // Move to another column (including empty column)
             const targetColumnTasks = tasks.filter((t) => t.column === targetColumn);
-            const newOrder = targetColumnTasks.length; // ✅ If empty, this is 0
+            const newOrder = targetColumnTasks.length; // If empty, this is 0
 
-            // ✅ Optimistic update
+            // Optimistic update
             queryClient.setQueryData<Task[]>(["tasks", boardId], (old = []) =>
                 old.map((t) =>
                     t.id === activeTask.id
@@ -103,7 +119,7 @@ export default function Board() {
         return copy.map((task, index) => ({...task, order: index}));
     };
 
-    // ✅ Safe render after hooks
+    // Safe render after hooks
     if (!boardId) return <p className="text-center mt-6">No boards available</p>;
     if (isLoading) return <p className="text-center mt-6">Loading tasks...</p>;
     if (isError) return <p className="text-center text-red-500">Failed to load tasks</p>;
@@ -115,34 +131,33 @@ export default function Board() {
             onDragEnd={handleDragEnd}
             onDragCancel={handleDragCancel}
         >
-            <div className="w-full h-full px-4 py-6 overflow-x-auto">
-                <div className="flex gap-6 min-w-max">
+            <div className="w-full h-full px-4 py-6">
+                <TaskToolbar onFilterChange={handleFilterChange} />
+
+                <div className="flex gap-6 min-w-max overflow-x-auto">
                     {columns.map((col) => (
                         <BoardColumn
                             key={col.id}
                             columnId={col.id}
                             title={col.title}
-                            tasks={tasks.filter((t) => t.column === col.id).sort((a, b) => a.order - b.order)}
+                            tasks={filteredTasks.filter((t) => t.column === col.id).sort((a, b) => a.order - b.order)}
                         />
                     ))}
                 </div>
 
-                {tasks.length === 0 && (
+                {filteredTasks.length === 0 && (
                     <div className="mt-10 text-center text-gray-400 text-lg">
-                        No tasks yet. Click <strong>+ Add Task</strong> to create your first one.
+                        No tasks match your filters.
                     </div>
                 )}
             </div>
 
-            {/* ✅ Safe DragOverlay fallback */}
             <DragOverlay>
                 {activeTask ? (
                     <div className="pointer-events-none opacity-90 scale-105 shadow-lg">
-                        <TaskCard task={activeTask} dragging/>
+                        <TaskCard task={activeTask} dragging />
                     </div>
-                ) : (
-                    <div/>
-                )}
+                ) : null}
             </DragOverlay>
         </DndContext>
     );
