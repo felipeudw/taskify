@@ -14,6 +14,12 @@ export interface CreateTaskRequest {
     column: 'inbox' | 'today' | 'week' | 'upcoming';
 }
 
+export interface UpdateTaskRequest {
+    title: string;
+    priority: 'low' | 'medium' | 'high';
+    column: 'inbox' | 'today' | 'week' | 'upcoming';
+}
+
 export const createTask = async (data: CreateTaskRequest) => {
     const res = await api.post('/tasks', data);
     return res.data;
@@ -49,5 +55,10 @@ export const moveTaskApi = async ({
 
 export const reorderTasksApi = async (updates: { id: string; order: number }[]) => {
     const res = await api.patch('/tasks/reorder', {updates});
+    return res.data;
+};
+
+export const updateTask = async (taskId: string, data: UpdateTaskRequest) => {
+    const res = await api.patch(`/tasks/${taskId}`, data);
     return res.data;
 };

@@ -1,11 +1,12 @@
 import {useSortable} from "@dnd-kit/sortable";
 import {CSS} from "@dnd-kit/utilities";
-import {GripVertical, Trash2, CheckCircle, Circle} from "lucide-react";
+import {GripVertical, Trash2, CheckCircle, Circle, Pencil} from "lucide-react";
 import {cn} from "../../lib/utils";
 import {priorityBorderColors} from "../../constants/ui";
 import type {Task} from "@/api/taskApi";
 import {useMutation, useQueryClient} from "@tanstack/react-query";
 import {deleteTaskApi, toggleTaskApi} from "@/api/taskApi";
+import EditTaskModal from "./EditTaskModal";
 
 interface TaskCardProps {
     task: Task;
@@ -18,23 +19,22 @@ export default function TaskCard({task, dragging = false}: TaskCardProps) {
     const deleteMutation = useMutation({
         mutationFn: () => deleteTaskApi(task.id),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["tasks", task.boardId] });
+            queryClient.invalidateQueries({queryKey: ["tasks", task.boardId]});
         },
     });
 
     const toggleMutation = useMutation({
         mutationFn: () => toggleTaskApi(task.id, !task.done),
         onMutate: async () => {
-            await queryClient.cancelQueries({ queryKey: ['tasks', task.boardId] });
+            await queryClient.cancelQueries({queryKey: ['tasks', task.boardId]});
 
             const previousTasks = queryClient.getQueryData<Task[]>(['tasks', task.boardId]);
 
-            // Optimistic update
             queryClient.setQueryData(['tasks', task.boardId], (old: Task[] = []) =>
-                old.map((t) => (t.id === task.id ? { ...t, done: !task.done } : t))
+                old.map((t) => (t.id === task.id ? {...t, done: !task.done} : t))
             );
 
-            return { previousTasks };
+            return {previousTasks};
         },
         onError: (_err, _vars, context) => {
             if (context?.previousTasks) {
@@ -42,7 +42,7 @@ export default function TaskCard({task, dragging = false}: TaskCardProps) {
             }
         },
         onSettled: () => {
-            queryClient.invalidateQueries({ queryKey: ['tasks', task.boardId] });
+            queryClient.invalidateQueries({queryKey: ['tasks', task.boardId]});
         },
     });
 
@@ -66,13 +66,13 @@ export default function TaskCard({task, dragging = false}: TaskCardProps) {
             ref={setNodeRef}
             style={style}
             className={cn(
-                "relative group bg-background border rounded-lg p-4 flex items-center transition-colors hover:shadow-md",
+                "relative group bg-background border rounded-lg p-4 flex flex-col justify-between transition-shadow hover:shadow-md",
                 dragging && "opacity-50",
                 `border-r-8 ${priorityColor}`
             )}
         >
-            {/* Left: Drag handle + Done toggle */}
-            <div className="flex items-center gap-3">
+            {/* Drag handle */}
+            <div className="absolute top-2 left-2">
                 {!dragging && (
                     <button
                         {...listeners}
@@ -82,57 +82,78 @@ export default function TaskCard({task, dragging = false}: TaskCardProps) {
                         <GripVertical size={16}/>
                     </button>
                 )}
-
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        toggleMutation.mutate();
-                    }}
-                    disabled={toggleMutation.isLoading}
-                    className="transition-colors"
-                >
-                    {task.done ? (
-                        <CheckCircle
-                            size={18}
-                            className="text-green-500 dark:text-green-400"
-                        />
-                    ) : (
-                        <Circle
-                            size={18}
-                            className="text-muted-foreground hover:text-green-500"
-                        />
-                    )}
-                </button>
             </div>
 
-            {/* Task Title */}
-            <div className="flex-1 px-3 text-sm break-words">
+            {/* Main content: Title */}
+            <div className="flex-1 text-sm px-2 pt-1">
                 <h3
                     className={cn(
-                        "font-medium text-foreground",
+                        "font-medium text-foreground text-base break-words",
                         task.done && "line-through text-muted-foreground"
                     )}
                 >
                     {task.title}
                 </h3>
                 {task.dueDate && (
-                    <p className="text-xs text-muted-foreground">{task.dueDate}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{task.dueDate}</p>
                 )}
             </div>
 
-            {/* Delete Button */}
-            {!dragging && (
+            {/* Footer: Actions (hidden by default, shown on hover) */}
+            <div
+                className="flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity mt-3 border-t pt-2"
+            >
+                {/* Done toggle */}
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        toggleMutation.mutate();
+                    }}
+                    disabled={toggleMutation.isLoading}
+                    className="flex items-center gap-1 text-muted-foreground hover:text-green-500"
+                >
+                    {task.done ? (
+                        <>
+                            <CheckCircle size={16}/>
+                            <span className="text-xs">Undo</span>
+                        </>
+                    ) : (
+                        <>
+                            <Circle size={16}/>
+                            <span className="text-xs">Done</span>
+                        </>
+                    )}
+                </button>
+
+                {/* Edit Task */}
+                <EditTaskModal
+                    taskId={task.id}
+                    initialTitle={task.title}
+                    initialPriority={task.priority}
+                    initialColumn={task.column}
+                >
+                    <button
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex items-center gap-1 text-muted-foreground hover:text-blue-500"
+                    >
+                        <Pencil size={16}/>
+                        <span className="text-xs">Edit</span>
+                    </button>
+                </EditTaskModal>
+
+                {/* Delete */}
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
                         deleteMutation.mutate();
                     }}
                     disabled={deleteMutation.isLoading}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-600"
+                    className="flex items-center gap-1 text-red-500 hover:text-red-600"
                 >
-                    <Trash2 size={18}/>
+                    <Trash2 size={16}/>
+                    <span className="text-xs">Delete</span>
                 </button>
-            )}
+            </div>
         </div>
     );
 }
