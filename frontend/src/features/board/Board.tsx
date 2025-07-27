@@ -115,7 +115,7 @@ export default function Board() {
             onDragEnd={handleDragEnd}
             onDragCancel={handleDragCancel}
         >
-            <div className="w-full h-full bg-muted px-4 py-6 overflow-x-auto">
+            <div className="w-full h-full px-4 py-6 overflow-x-auto">
                 <div className="flex gap-6 min-w-max">
                     {columns.map((col) => (
                         <BoardColumn
