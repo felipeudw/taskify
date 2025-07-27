@@ -1,0 +1,45 @@
+version: "3.9"
+services:
+  backend:
+    build: .
+    container_name: taskify_backend
+    ports:
+      - "3000:3000"
+    networks:
+      - taskify-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://taskify:taskipass@postgres:5432/taskifydb
+    volumes:
+      - .:/app
+    command: npm run start:dev
+
+  postgres:
+    image: postgres:17
+    container_name: taskify_postgres
+    hostname: taskify_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: taskify
+      POSTGRES_PASSWORD: taskipass
+      POSTGRES_DB: taskifydb
+    ports:
+      - "5432:5432"
+    networks:
+      - taskify-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U taskify -d taskifydb" ]
+      interval: 5s
+      timeout: 2s
+      retries: 20
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+networks:
+  taskify-network:
+    name: taskify-network
+
+volumes:
+  postgres_data:
