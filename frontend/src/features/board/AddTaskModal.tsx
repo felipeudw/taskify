@@ -82,6 +82,7 @@ export default function AddTaskModal({
                     <div>
                         <Input
                             placeholder="Task description"
+                            data-testid="task-title-input"
                             {...form.register('title')}
                             className={form.formState.errors.title ? 'border-red-500' : ''}
                         />
@@ -96,7 +97,7 @@ export default function AddTaskModal({
                             value={form.watch('priority')}
                             onValueChange={(val) => form.setValue('priority', val as 'low' | 'medium' | 'high')}
                         >
-                            <SelectTrigger className="w-[50%]">
+                            <SelectTrigger className="w-[50%]" data-testid="priority-select">
                                 <SelectValue placeholder="Priority"/>
                             </SelectTrigger>
                             <SelectContent>
@@ -128,7 +129,7 @@ export default function AddTaskModal({
                                 form.setValue('column', val as 'inbox' | 'today' | 'week' | 'upcoming')
                             }
                         >
-                            <SelectTrigger className="w-[50%]">
+                            <SelectTrigger className="w-[50%]" data-testid="column-select">
                                 <SelectValue placeholder="Column"/>
                             </SelectTrigger>
                             <SelectContent>
@@ -143,7 +144,7 @@ export default function AddTaskModal({
                     {apiError && <p className="text-red-500 text-sm">{apiError}</p>}
 
                     <DialogFooter>
-                        <Button type="submit" disabled={loading}>
+                        <Button type="submit" disabled={loading} data-testid="submit-task">
                             {loading ? 'Adding...' : 'Add Task'}
                         </Button>
                     </DialogFooter>

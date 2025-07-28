@@ -7,6 +7,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+generator db_seed {
+  provider = "node"
+}
+
 model User {
   id        String   @id @default(uuid())
   email     String   @unique

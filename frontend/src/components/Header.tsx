@@ -34,7 +34,7 @@ export function Header() {
             {/* Left: Add Task */}
             <div className="order-1">
                 <AddTaskModal>
-                    <Button className="bg-white/20 hover:bg-white/30 text-primary-foreground">
+                    <Button className="bg-white/20 hover:bg-white/30 text-primary-foreground" data-testid="add-task-button">
                         + Add Task
                     </Button>
                 </AddTaskModal>
