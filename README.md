@@ -132,6 +132,9 @@ docker compose up -d
 # Install dependencies
 npm install
 
+# Apply Prisma migrations to the database (first time only)
+npx prisma migrate dev
+
 # Start backend server
 npm run start
 ```
