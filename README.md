@@ -103,8 +103,6 @@ Because task managers should be **beautiful**, **fast**, and **developer-friendl
 
 ## 🏃 How to Run (Frontend & Backend)
 
-# 🏃 How to Run (Frontend & Backend)
-
 ## ✅ Prerequisites
 ```
 - Node.js (v18+)
