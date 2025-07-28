@@ -96,11 +96,6 @@ Taskify is a **full-stack task management platform** designed to be simple, beau
 
 ---
 
-## 💡 Why Taskify?  
-Because task managers should be **beautiful**, **fast**, and **developer-friendly**. Taskify brings everything you need: a smooth UI, strong backend, and a codebase designed for **scalability and maintainability**.
-
----
-
 ## 🏃 How to Run (Frontend & Backend)
 
 ## ✅ Prerequisites
