@@ -135,9 +135,6 @@ npm install
 # Apply Prisma migrations to the database (first time only)
 npx prisma migrate dev
 
-# 5. Generate Prisma client (first time only)
-npx prisma generate
-
 # Start backend server
 npm run start
 ```
