@@ -78,7 +78,7 @@ Taskify is a **full-stack task management platform** designed to be simple, beau
 
 ---
 
-## 📸 Screenshots (Coming Soon)  
+## 📸 Screenshots 
 
 ![Landing Page](screenshots/taskify-01.png)
 ![Board View](screenshots/taskify-02.png)
