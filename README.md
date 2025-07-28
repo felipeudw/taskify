@@ -171,10 +171,5 @@ npm run test:e2e
 
 ---
 
-## 🤝 Contributing  
-Contributions are welcome! If you’d like to improve Taskify, feel free to fork the repo and create a PR.
-
----
-
 ## 📜 License  
 [MIT](LICENSE)
