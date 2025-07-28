@@ -8,7 +8,7 @@ Taskify is a **full-stack task management platform** designed to be simple, beau
 
 ---
 
-### 🔗 Check Out My Other Demo
+### 🔗 Other Tech Demos
 👉 **[React Migration Demo](https://gitlab.com/felipedemoworks/react-migration-demo)**  
 Migration from **Redux** to **Zustand + TanStack Query** in a realistic approach for enterprise apps.
 
