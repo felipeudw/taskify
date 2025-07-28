@@ -40,7 +40,7 @@ export const useTaskStoreOld = create<TaskStore>()(
                         t.id === taskId ? { ...t, column: newColumn } : t
                     );
 
-                    // ✅ If beforeTaskId is provided, reorder after moving
+                    // If beforeTaskId is provided, reorder after moving
                     if (beforeTaskId) {
                         const targetIndex = updatedTasks.findIndex((t) => t.id === beforeTaskId);
                         const movingIndex = updatedTasks.findIndex((t) => t.id === taskId);

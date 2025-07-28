@@ -20,7 +20,7 @@ import {Input} from '@/components/ui/input';
 import {useForm} from 'react-hook-form';
 import {z} from 'zod';
 import {zodResolver} from '@hookform/resolvers/zod';
-import {updateTask, type UpdateTaskRequest} from '@/api/taskApi'; // <-- You need this API function
+import {updateTask, type UpdateTaskRequest} from '@/api/taskApi';
 import {priorityColors} from '@/constants/ui';
 import {useAuthStore} from "@/store/authStore.ts";
 import {useQueryClient} from "@tanstack/react-query";
