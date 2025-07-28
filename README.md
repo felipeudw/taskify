@@ -161,6 +161,9 @@ npm run db:reset:test
 npm run start:test
 ```
 
+We use a **dedicated test database with seed data** to ensure consistent and isolated test runs.  
+This setup makes it easy to run tests locally or in **Docker/CI environments**.
+
 ---
 
 ## Frontend E2E Tests
